@@ -28,11 +28,11 @@
       "type": "shell",
       "linux": {
         "command": "bash",
-        "args": ["-c", "export WOKWI_CLI_TOKEN=$(grep WOKWI_CLI_TOKEN ~/.bashrc | cut -d= -f2); ~/.local/bin/wokwi-cli --timeout 12000 --expect-text ';190;928;24;100;24;193;1' --serial-log-file build/serial.log ."]
+        "args": ["-c", "export WOKWI_CLI_TOKEN=$(grep WOKWI_CLI_TOKEN ~/.bashrc | cut -d= -f2); ~/.local/bin/wokwi-cli --timeout 12000 --expect-text ';190;928;24;100;24;194;1' --serial-log-file build/serial.log ."]
       },
       "osx": {
         "command": "bash",
-        "args": ["-c", "~/.local/bin/wokwi-cli --timeout 12000 --expect-text ';190;928;24;100;24;193;1' --serial-log-file build/serial.log ."]
+        "args": ["-c", "~/.local/bin/wokwi-cli --timeout 12000 --expect-text ';190;928;24;100;24;194;1' --serial-log-file build/serial.log ."]
       },
       "dependsOn": ["Build (arduino-cli)"],
       "presentation": {
