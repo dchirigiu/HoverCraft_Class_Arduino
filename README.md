@@ -68,7 +68,14 @@ On Windows: `flash.cmd COM5` (new bootloader) or `flash.cmd COM5 oldbootloader`
 ## Firmware behavior (TA1)
 
 - `SENSOR_SOURCE` at the top of the sketch selects IR or US as the driver sensor.
+- Pin map (from the course PCB's `init_290.c`): IR on **A0**; HC-SR04 **TRIG on
+  D8** and **ECHO on D2** (D4–D7 are power-control outputs on the PCB — never
+  wire the sensor there); D3 LED on **PB3 = Arduino pin 11, ACTIVE-LOW**
+  (PWM `255 - duty`); "L" on **PB5 = D13**. Confirm the silkscreen labels on
+  your board revision before flashing.
 - D3 brightness: ≤16 cm → 100%, ≥49 cm → 0%, linear in between (integer `map`).
 - L (D13/PB5) blinks with T = 1.5 s while the obstacle is outside [16; 49] cm.
 - UART 9600 8N1: `t_ms;IR_adc;IR_mV;IR_cm;US_cm;src_cm;PWM;L` — same lines must
-  appear in the sim and on the real board.
+  appear in the sim and on the real board. The printed `PWM` column is the
+  *logical* duty (100% = 255); the pin output is inverted because D3 is
+  active-low.
