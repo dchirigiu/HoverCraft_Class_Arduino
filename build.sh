@@ -13,4 +13,4 @@ if [ "${OLD_BOOTLOADER:-0}" = "1" ]; then FQBN="arduino:avr:nano:cpu=atmega328ol
 
 mkdir -p build
 "$ACLI" compile --fqbn "$FQBN" --output-dir build sketch/hovercraft_ta1 "$@"
-echo "OK: build/hovercraft_ta1.elf + build/hovercraft_ta1.hex"
+echo "OK: build/hovercraft_ta1.ino.elf + build/hovercraft_ta1.ino.hex"
