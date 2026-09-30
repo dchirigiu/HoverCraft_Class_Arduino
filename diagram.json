@@ -9,7 +9,7 @@
       "id": "ir",
       "top": 10,
       "left": 320,
-      "attrs": { "value": "300" }
+      "attrs": { "value": "190" }
     },
     {
       "type": "wokwi-hc-sr04",

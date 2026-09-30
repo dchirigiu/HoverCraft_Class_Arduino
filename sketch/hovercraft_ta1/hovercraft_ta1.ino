@@ -115,10 +115,10 @@ void loop() {
     else                                     pwm = (uint8_t)map(cm, D1_CM, D2_CM, 255, 0);
     analogWrite(PIN_D3, 255 - pwm);  // D3 is ACTIVE-LOW on the course PCB: duty 255 -> pin 0 -> LED full ON
 
-    // L: flash T=1.5 s while outside [d1; d2]; solid off while inside.
+    // L (option B): solid ON while inside [d1; d2]; flash T=1.5 s while outside.
     const bool outside = (cm == IR_OUT_OF_RANGE) || (cm < D1_CM) || (cm > D2_CM);
     if (!outside) {
-        lState = false;
+        lState = true;  // inside range -> solid ON
     } else if (now - tBlink >= BLINK_HALF_MS) {
         tBlink = now;
         lState = !lState;

@@ -53,6 +53,11 @@ $env:Path += ";$env:LOCALAPPDATA\Programs\arduino-cli"   # use it right away
 
 # ---- 3. AVR chip support ----
 Step "3/7 Arduino AVR support (chip definitions)"
+# Pin the sketchbook dir: some Windows profiles have a broken/redirected
+# Documents known-folder, which makes arduino-cli fail with
+# "cannot get documents folder".
+$env:ARDUINO_DIRECTORIES_USER = "$env:LOCALAPPDATA\Arduino15\user"
+New-Item -ItemType Directory -Force -Path $env:ARDUINO_DIRECTORIES_USER | Out-Null
 $cores = (& $acli core list) | Out-String
 if ($cores -like '*arduino:avr*') {
   Write-Host "already installed - skipping"

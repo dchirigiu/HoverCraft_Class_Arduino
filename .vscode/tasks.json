@@ -24,25 +24,15 @@
       "problemMatcher": []
     },
     {
-      "label": "Simulate (Wokwi CLI)",
+      "label": "Simulate (Wokwi CLI, needs WSL or token)",
       "type": "shell",
-      "windows": {
-        "command": "powershell",
-        "args": [
-          "-NoProfile",
-          "-ExecutionPolicy",
-          "Bypass",
-          "-Command",
-          "$env:Path += ';' + $env:LOCALAPPDATA + '\\Programs\\arduino-cli'; & \"$env:USERPROFILE\\.local\\bin\\wokwi-cli.exe\" --timeout 12000 --expect-text ';300;1466;15;100;15;255' --serial-log-file build/serial.log ."
-        ]
-      },
       "linux": {
         "command": "bash",
-        "args": ["-c", "export WOKWI_CLI_TOKEN=$(grep WOKWI_CLI_TOKEN ~/.bashrc | cut -d= -f2); ~/.local/bin/wokwi-cli --timeout 12000 --expect-text ';300;1466;15;100;15;255' --serial-log-file build/serial.log ."]
+        "args": ["-c", "export WOKWI_CLI_TOKEN=$(grep WOKWI_CLI_TOKEN ~/.bashrc | cut -d= -f2); ~/.local/bin/wokwi-cli --timeout 12000 --expect-text ';190;928;24;100;24;193;1' --serial-log-file build/serial.log ."]
       },
       "osx": {
         "command": "bash",
-        "args": ["-c", "~/.local/bin/wokwi-cli --timeout 12000 --expect-text ';300;1466;15;100;15;255' --serial-log-file build/serial.log ."]
+        "args": ["-c", "~/.local/bin/wokwi-cli --timeout 12000 --expect-text ';190;928;24;100;24;193;1' --serial-log-file build/serial.log ."]
       },
       "dependsOn": ["Build (arduino-cli)"],
       "presentation": {

@@ -4,6 +4,9 @@ rem One-time setup: install the AVR toolchain with:  arduino-cli core install ar
 rem Usage:   flash.cmd COM5              (new bootloader)
 rem          flash.cmd COM5 oldbootloader (clone boards that fail to sync)
 setlocal
+rem Some Windows profiles have a broken/redirected Documents known-folder; pin
+rem the sketchbook dir so arduino-cli never fails with "cannot get documents".
+set "ARDUINO_DIRECTORIES_USER=%LOCALAPPDATA%\Arduino15\user"
 where arduino-cli >nul 2>nul || (echo arduino-cli not in PATH - install with: winget install Arduino.Cli & exit /b 1)
 if "%~1"=="" (
   arduino-cli board list

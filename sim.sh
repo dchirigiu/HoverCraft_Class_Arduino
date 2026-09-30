@@ -7,5 +7,5 @@ cd "$(dirname "$0")"
 [ -f build/hovercraft_ta1.ino.elf ] || { echo "Run ./build.sh first"; exit 1; }
 WOKWI="${WOKWI_CLI:-$HOME/.local/bin/wokwi-cli}"
 command -v "$WOKWI" >/dev/null 2>&1 || WOKWI="$(command -v wokwi-cli)"
-"$WOKWI" --timeout "${1:-12000}" --expect-text ';300;1466;15;100;15;255;1' --serial-log-file build/serial.log .
+"$WOKWI" --timeout "${1:-12000}" --expect-text ';190;928;24;100;24;194;1' --serial-log-file build/serial.log .
 echo "Sim passed - serial log: build/serial.log"
