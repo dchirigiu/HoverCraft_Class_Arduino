@@ -22,7 +22,9 @@ flashed to the real Arduino Nano when it's your turn.
 2. `git clone <repo-url>` and open the folder in VS Code.
 3. Compile once: `./build.sh` (WSL) — needs [arduino-cli](https://arduino.github.io/arduino-cli/latest/installation/) + `arduino-cli core install arduino:avr`.
    (On Windows: install arduino-cli, then run `flash.cmd` to compile+flash.)
-4. Press **F1 → "Wokwi: Start Simulator"** — that's the virtual Nano with the sensors.
+4. Press **F1 → "Wokwi: Request a new License"** (one-time, free): confirm the
+   browser, click **GET YOUR LICENSE**, confirm twice.
+5. Press **F1 → "Wokwi: Start Simulator"** — that's the virtual Nano with the sensors.
 
 ## Simulating
 

@@ -11,12 +11,25 @@ function Step($m) { Write-Host "" ; Write-Host "== $m ==" -ForegroundColor Cyan 
 
 # ---- 1. VS Code ----
 Step "1/7 VS Code (editor)"
-$codeCmd = "$env:LOCALAPPDATA\Programs\Microsoft VS Code\bin\code.cmd"
-if (Test-Path $codeCmd) {
+function Find-CodeCmd {
+  $c = Get-Command code.cmd -ErrorAction SilentlyContinue
+  if ($c) { return $c.Source }
+  foreach ($p in @("$env:LOCALAPPDATA\Programs\Microsoft VS Code\bin\code.cmd",
+                   "$env:ProgramFiles\Microsoft VS Code\bin\code.cmd")) {
+    if (Test-Path $p) { return $p }
+  }
+  return $null
+}
+$codeCmd = Find-CodeCmd
+if ($codeCmd) {
   Write-Host "already installed - skipping"
 } else {
   winget install -e --id Microsoft.VisualStudioCode --accept-package-agreements --accept-source-agreements --disable-interactivity --silent
-  if (-not (Test-Path $codeCmd)) { throw "VS Code install failed (no code.cmd found)" }
+  # winget may install per-user OR per-machine: refresh PATH and re-resolve instead of guessing the location
+  $env:Path = [Environment]::GetEnvironmentVariable('Path', 'Machine') + ';' +
+              [Environment]::GetEnvironmentVariable('Path', 'User') + ';' + $env:Path
+  $codeCmd = Find-CodeCmd
+  if (-not $codeCmd) { throw "VS Code install failed (could not find code.cmd after install)" }
   Write-Host "installed"
 }
 
@@ -67,6 +80,8 @@ if (-not $NoGit) {
   } else {
     try {
       winget install -e --id Git.Git --accept-package-agreements --accept-source-agreements --disable-interactivity --silent
+      $env:Path = [Environment]::GetEnvironmentVariable('Path', 'Machine') + ';' +
+                  [Environment]::GetEnvironmentVariable('Path', 'User') + ';' + $env:Path
       Write-Host "installed (a UAC prompt may have appeared)"
     } catch {
       Write-Warning "git install failed - you can still simulate; for GitHub, download ZIPs or install git later"
@@ -81,7 +96,14 @@ Step "6/7 Project folder"
 $dest = Join-Path $ProjectsDir "HoverCraft_Class_Arduino"
 if (Test-Path $dest) {
   Write-Host "already exists - using it: $dest"
+} elseif (Get-Command git -ErrorAction SilentlyContinue) {
+  # Full clone: has .git + remote so the friend can pull/push with the group.
+  git clone https://github.com/dchirigiu/HoverCraft_Class_Arduino.git $dest
+  if ($LASTEXITCODE -ne 0) { throw "git clone failed - check internet/connection" }
+  Write-Host "cloned (with git history) to: $dest"
 } else {
+  # No git available: ZIP download. Works for simulating, but no .git/remote -
+  # to commit later, install git and re-run this script (it will clone).
   $z = "$env:TEMP\hovercraft_repo.zip"
   Invoke-WebRequest -Uri 'https://github.com/dchirigiu/HoverCraft_Class_Arduino/archive/refs/heads/main.zip' -OutFile $z
   $tmp = "$env:TEMP\hovercraft_extract"
@@ -90,7 +112,7 @@ if (Test-Path $dest) {
   $inner = (Get-ChildItem $tmp -Directory | Select-Object -First 1).FullName
   Copy-Item $inner $dest -Recurse
   Remove-Item $tmp -Recurse -Force -ErrorAction SilentlyContinue
-  Write-Host "downloaded to: $dest"
+  Write-Host "downloaded to: $dest (no git - ask Panchoo how to connect it to GitHub later)"
 }
 Set-Location $dest
 
@@ -106,8 +128,11 @@ Write-Host @"
 Next steps:
   1. Open the folder in VS Code:  code "$dest"
      (or: right-click the folder > Open with Code)
-  2. Press F1, type "wokwi", choose "Wokwi: Start Simulator"
-  3. Click the potentiometer (IR stand-in) or the HC-SR04 to change distances,
+  2. Press F1, type "wokwi", choose "Wokwi: Request a new License":
+     confirm opening the browser, click "GET YOUR LICENSE"
+     (free account), confirm twice - this is one-time only.
+  3. Then F1 > "Wokwi: Start Simulator" to run the project.
+  4. Click the potentiometer (IR stand-in) or the HC-SR04 to change distances,
      and watch the SERIAL MONITOR tab print distances.
 Note: if VS Code was JUST installed, close and reopen it once so it sees the tools.
 "@

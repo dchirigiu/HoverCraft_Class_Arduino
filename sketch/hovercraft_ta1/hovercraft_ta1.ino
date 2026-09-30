@@ -18,9 +18,9 @@
 
 // ---------------- Pins (mirrored in diagram.json) ----------------
 const uint8_t PIN_IR   = A0; // GP2Y0A21 analog out -> any ADC header on the course PCB
-const uint8_t PIN_TRIG = 5;  // HC-SR04 TRIG
+const uint8_t PIN_TRIG = 8;  // HC-SR04 TRIG (D8; NEVER D4-D7 = PD4-PD7: power-control outputs on the course PCB, init_290.c)
 const uint8_t PIN_ECHO = 2;  // HC-SR04 ECHO (INT0, same channel as course sample code)
-const uint8_t PIN_D3   = 3;  // D3 LED, PWM brightness
+const uint8_t PIN_D3   = 11; // D3 LED = PB3 (Arduino pin 11), ACTIVE-LOW on the course PCB (init_290.c: "PB3-HI (D3 OFF)"); PWM via OC2A
 const uint8_t PIN_L    = 13; // "L" LED (PB5), active-high on the course board
 
 // ---------------- Configuration ----------------
@@ -93,7 +93,7 @@ void setup() {
     // analogReference(EXTERNAL); and update VREF_MV accordingly.
     Serial.begin(9600);
     Serial.println(F("TA1 READY"));
-    Serial.println(F("ENGR290 TA1 | IR=GP2Y0A21@A0 US=HC-SR04 TRIG=D5 ECHO=D2 | 9600 8N1"));
+    Serial.println(F("ENGR290 TA1 | IR=GP2Y0A21@A0 US=HC-SR04 TRIG=D8 ECHO=D2 | 9600 8N1"));
     Serial.println(F("t_ms;IR_adc;IR_mV;IR_cm;US_cm;src_cm;PWM;L"));
 }
 
@@ -113,7 +113,7 @@ void loop() {
     if (cm == IR_OUT_OF_RANGE || cm >= D2_CM) pwm = 0;
     else if (cm <= D1_CM)                    pwm = 255;
     else                                     pwm = (uint8_t)map(cm, D1_CM, D2_CM, 255, 0);
-    analogWrite(PIN_D3, pwm);
+    analogWrite(PIN_D3, 255 - pwm);  // D3 is ACTIVE-LOW on the course PCB: duty 255 -> pin 0 -> LED full ON
 
     // L: flash T=1.5 s while outside [d1; d2]; solid off while inside.
     const bool outside = (cm == IR_OUT_OF_RANGE) || (cm < D1_CM) || (cm > D2_CM);
