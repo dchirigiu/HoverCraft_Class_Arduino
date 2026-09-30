@@ -5,7 +5,7 @@
       "label": "Build (arduino-cli)",
       "type": "shell",
       "windows": {
-        "command": "build.cmd"
+        "command": ".\\build.cmd"
       },
       "linux": {
         "command": "./build.sh"
@@ -34,7 +34,7 @@
       },
       "linux": {
         "command": "bash",
-        "args": ["-c", "./sim.sh"]
+        "args": ["-c", "export WOKWI_CLI_TOKEN=$(grep -h WOKWI_CLI_TOKEN ~/.bashrc | tail -1 | cut -d= -f2); ./sim.sh"]
       },
       "osx": {
         "command": "bash",
