@@ -47,6 +47,18 @@ table values with your own DMM calibration points for the report.
 On Windows: `flash.cmd COM5` (new bootloader) or `flash.cmd COM5 oldbootloader`
 (older Nano clones). Find the COM port with `flash.cmd` (no args) → `board list`.
 
+## Comparing sim vs board
+
+1. Save the simulation's serial output: `./sim.sh` writes `build/serial.log`
+   (or copy the serial monitor text from the VS Code sim).
+2. Flash the board: `flash.cmd COM5`.
+3. Record the board's UART: `powershell -ExecutionPolicy Bypass -File capture.ps1 COM5 60`
+   → writes `board_serial.log`.
+4. Compare the columns (`t_ms;IR_adc;IR_mV;IR_cm;US_cm;src_cm;PWM;L`) between the
+   two logs. Raw counts should match closely for the same conditions; distances
+   differ only because the physical obstacle position differs from the sim's
+   potentiometer / HC-SR04 slider settings.
+
 ## Firmware behavior (TA1)
 
 - `SENSOR_SOURCE` at the top of the sketch selects IR or US as the driver sensor.
