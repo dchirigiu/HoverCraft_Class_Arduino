@@ -9,7 +9,7 @@
       "id": "ir",
       "top": 10,
       "left": 320,
-      "attrs": { "value": "300", "label": "GP2Y0A21 stand-in" }
+      "attrs": { "value": "300" }
     },
     {
       "type": "wokwi-hc-sr04",
