@@ -28,7 +28,7 @@ jobs:
           token: ${{ secrets.WOKWI_CLI_TOKEN }}
           path: /
           timeout: 15000
-          expect_text: ';300;1466;15;100;15;255'
+          expect_text: ';300;1466;15;100;15;255;1'
           fail_text: 'ERROR'
           serial_log_file: 'build/serial.log'
 

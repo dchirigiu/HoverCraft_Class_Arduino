@@ -1,0 +1,55 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build (arduino-cli)",
+      "type": "shell",
+      "windows": {
+        "command": "build.cmd"
+      },
+      "linux": {
+        "command": "./build.sh"
+      },
+      "osx": {
+        "command": "./build.sh"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Simulate (Wokwi CLI)",
+      "type": "shell",
+      "windows": {
+        "command": "powershell",
+        "args": [
+          "-NoProfile",
+          "-ExecutionPolicy",
+          "Bypass",
+          "-Command",
+          "$env:Path += ';' + $env:LOCALAPPDATA + '\\Programs\\arduino-cli'; & \"$env:USERPROFILE\\.local\\bin\\wokwi-cli.exe\" --timeout 12000 --expect-text ';300;1466;15;100;15;255' --serial-log-file build/serial.log ."
+        ]
+      },
+      "linux": {
+        "command": "bash",
+        "args": ["-c", "export WOKWI_CLI_TOKEN=$(grep WOKWI_CLI_TOKEN ~/.bashrc | cut -d= -f2); ~/.local/bin/wokwi-cli --timeout 12000 --expect-text ';300;1466;15;100;15;255' --serial-log-file build/serial.log ."]
+      },
+      "osx": {
+        "command": "bash",
+        "args": ["-c", "~/.local/bin/wokwi-cli --timeout 12000 --expect-text ';300;1466;15;100;15;255' --serial-log-file build/serial.log ."]
+      },
+      "dependsOn": ["Build (arduino-cli)"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    }
+  ]
+}

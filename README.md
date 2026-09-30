@@ -36,7 +36,7 @@ flashed to the real Arduino Nano when it's your turn.
 - **CI:** every push runs the sim in GitHub Actions using repo secret
   `WOKWI_CLI_TOKEN` (Settings → Secrets and variables → Actions). The gate
   (`--expect-text` in `sim.sh` and `sim.yml`) asserts the full deterministic
-  data row `;300;1466;15;100;15;255` — ADC 300 → 1466 mV → 15 cm → PWM 255 with
+  data row `;300;1466;15;100;15;255;1` — ADC 300 → 1466 mV → 15 cm → PWM 255 with
   US at 100 cm. If you change the diagram defaults (pot `value`, HC-SR04
   `distance`) or `IR_TABLE`, update that expected string in both places.
 
