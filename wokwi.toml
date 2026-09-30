@@ -1,0 +1,6 @@
+# Wokwi project configuration - paths are relative to this file (repo root).
+# Build first: ./build.sh  (outputs to build/)
+[wokwi]
+version = 1
+firmware = 'build/hovercraft_ta1.hex'
+elf = 'build/hovercraft_ta1.elf'

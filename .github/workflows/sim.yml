@@ -1,0 +1,40 @@
+name: simulation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  wokwi-sim:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install arduino-cli
+        run: |
+          curl -fsSL -o /tmp/acli.tgz https://downloads.arduino.cc/arduino-cli/arduino-cli_latest_Linux_64bit.tar.gz
+          tar -xzf /tmp/acli.tgz -C /usr/local/bin arduino-cli
+          arduino-cli core update-index
+          arduino-cli core install arduino:avr
+
+      - name: Compile
+        run: arduino-cli compile --fqbn arduino:avr:nano --output-dir build sketch/hovercraft_ta1
+
+      - name: Simulate in Wokwi
+        uses: wokwi/wokwi-ci-action@v1
+        with:
+          token: ${{ secrets.WOKWI_CLI_TOKEN }}
+          path: /
+          timeout: 15000
+          expect_text: 'IR_adc='
+          fail_text: 'ERROR'
+          serial_log_file: 'build/serial.log'
+
+      - name: Upload serial log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: serial-log
+          path: build/serial.log

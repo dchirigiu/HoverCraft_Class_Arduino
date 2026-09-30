@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "author": "ENGR 290 hovercraft group",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "wokwi-arduino-nano", "id": "nano", "top": 0, "left": 0, "attrs": {} },
+    {
+      "type": "wokwi-potentiometer",
+      "id": "ir",
+      "top": 10,
+      "left": 320,
+      "attrs": { "value": "300", "label": "GP2Y0A21 stand-in" }
+    },
+    {
+      "type": "wokwi-hc-sr04",
+      "id": "us",
+      "top": 160,
+      "left": 300,
+      "attrs": { "distance": "100" }
+    },
+    { "type": "wokwi-led", "id": "d3", "top": 60, "left": -180, "attrs": { "color": "red", "label": "D3" } },
+    { "type": "wokwi-led", "id": "l", "top": 160, "left": -180, "attrs": { "color": "yellow", "label": "L" } },
+    { "type": "wokwi-resistor", "id": "r1", "top": 40, "left": -100, "attrs": { "value": "220" } },
+    { "type": "wokwi-resistor", "id": "r2", "top": 140, "left": -100, "attrs": { "value": "220" } }
+  ],
+  "connections": [
+    [ "ir:SIG", "nano:A0", "green", [] ],
+    [ "ir:VCC", "nano:5V", "red", [] ],
+    [ "ir:GND", "nano:GND.1", "black", [] ],
+    [ "us:VCC", "nano:5V", "red", [] ],
+    [ "us:GND", "nano:GND.1", "black", [] ],
+    [ "us:TRIG", "nano:5", "orange", [] ],
+    [ "us:ECHO", "nano:2", "orange", [] ],
+    [ "nano:3", "r1:1", "gold", [] ],
+    [ "r1:2", "d3:A", "gold", [] ],
+    [ "d3:C", "nano:GND.2", "black", [] ],
+    [ "nano:13", "r2:1", "gold", [] ],
+    [ "r2:2", "l:A", "gold", [] ],
+    [ "l:C", "nano:GND.2", "black", [] ]
+  ]
+}
