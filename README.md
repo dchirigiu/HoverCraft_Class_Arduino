@@ -47,10 +47,6 @@ flashed to the real Arduino Nano when it's your turn.
 Wokwi has an exact **HC-SR04** part. There is no Sharp GP2Y0A21 part, so the IR
 sensor is emulated by a **potentiometer on A0** (`ir` in diagram.json) — turn the
 knob to set the "distance". The firmware converts mV → cm with a piecewise-linear
-table (`IR_TABLE` in the sketch) using the Sharp datasheet curve; replace the
-table values with your own DMM calibration points for the report.
-table (`IR_TABLE`) using the Sharp datasheet curve. Replace those table values
-with your own DMM calibration points for the TA1 report.
 ## Flashing the real board
 
 On Windows: `.\flash.cmd` (no args) lists the ports. Then `.\flash.cmd COM5`
@@ -94,10 +90,10 @@ sketch before flashing. The boot banner prints which build is running.
 
 - `IR_cm` never shows less than 10: the IR table starts at 10 cm, so anything
   closer is clamped to 10.
-- UART 9600 8N1: `t_ms;IR_adc;IR_mV;IR_cm;US_cm;src_cm;PWM;L` — same lines must
-  appear in the sim and on the real board. The printed `PWM` column is the
+- UART 9600 8N1: `t_ms;IR_adc;IR_mV;IR_cm;US_cm;src_cm;PWM;L;US_us` — same lines
+  must appear in the sim and on the real board. The printed `PWM` column is the
   *logical* duty (100% = 255); the pin output is inverted because D3 is
-  active-low.
+  active-low. `US_us` is the echo pulse width in microseconds (table 1 "time").
 
 ## Test A: simulator only (2 min)
 
