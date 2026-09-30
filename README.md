@@ -74,8 +74,21 @@ On Windows: `flash.cmd COM5` (new bootloader) or `flash.cmd COM5 oldbootloader`
   wire the sensor there); D3 LED on **PB3 = Arduino pin 11, ACTIVE-LOW**
   (PWM `255 - duty`); "L" on **PB5 = D13**. Confirm the silkscreen labels on
   your board revision before flashing.
-- D3 brightness: ≤16 cm → 100%, ≥49 cm → 0%, linear in between (integer `map`).
-- L (D13/PB5) blinks with T = 1.5 s while the obstacle is outside [16; 49] cm.
+- D3 and L follow `src_cm` only (the sensor picked by `SENSOR_SOURCE`). `IR_cm`
+  and `US_cm` are always printed, but only one of them drives the LEDs. The two
+  LED rules are independent: below 16 cm, D3 is at 100% **and** L blinks
+  (TA1: "flash L when the obstacle is outside [d1; d2]").
+
+| `src_cm` (cm) | D3 brightness | L (D13/PB5) |
+|---|---|---|
+| below 16 | 100% | blinks, T = 1.5 s |
+| 16 | 100% | solid ON |
+| 17 to 48 | dims linearly as distance grows | solid ON |
+| 49 | 0% | solid ON |
+| above 49, or 999 (no reading) | 0% | blinks, T = 1.5 s |
+
+- `IR_cm` never shows less than 10: the IR table starts at 10 cm, so anything
+  closer is clamped to 10.
 - UART 9600 8N1: `t_ms;IR_adc;IR_mV;IR_cm;US_cm;src_cm;PWM;L` — same lines must
   appear in the sim and on the real board. The printed `PWM` column is the
   *logical* duty (100% = 255); the pin output is inverted because D3 is

@@ -6,6 +6,8 @@
  *   - Reads IR rangefinder (Sharp GP2Y0A21, analog) and US rangefinder (HC-SR04, digital)
  *   - D3 brightness: d <= d1 (16 cm) -> 100%, d >= d2 (49 cm) -> 0%, linear in between
  *   - "L" LED (PB5 / D13) flashes with T = 1.5 s while obstacle is OUTSIDE [d1; d2]
+ *     (closer than d1, farther than d2, or no reading) and is solid ON inside it.
+ *     Below d1, D3 is at 100% AND L flashes: the two rules are independent.
  *   - Prints ADC counts, millivolts, and distance over UART (9600 8-N-1)
  *
  * Integer math only (TA1 question 6): no floats anywhere. Distances come from a
