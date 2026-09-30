@@ -7,7 +7,8 @@ setlocal
 rem Some Windows profiles have a broken/redirected Documents known-folder; pin
 rem the sketchbook dir so arduino-cli never fails with "cannot get documents".
 set "ARDUINO_DIRECTORIES_USER=%LOCALAPPDATA%\Arduino15\user"
-where arduino-cli >nul 2>nul || (echo arduino-cli not in PATH - install with: winget install Arduino.Cli & exit /b 1)
+where arduino-cli >nul 2>nul || set "PATH=%PATH%;%LOCALAPPDATA%\Programs\arduino-cli"
+where arduino-cli >nul 2>nul || (echo arduino-cli not found - run SETUP-FRIEND.cmd first or install from arduino.cc & exit /b 1)
 if "%~1"=="" (
   arduino-cli board list
   echo.

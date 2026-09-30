@@ -68,13 +68,19 @@ if ($cores -like '*arduino:avr*') {
 }
 
 # ---- 4. Wokwi simulator extension ----
-Step "4/7 Wokwi extension (the emulator inside VS Code)"
+Step "4/7 Wokwi extension + task buttons (the emulator inside VS Code)"
 $extList = (& $codeCmd --list-extensions) | Out-String
 if ($extList -like '*wokwi*') {
-  Write-Host "already installed - skipping"
+  Write-Host "wokwi already installed - skipping"
 } else {
   & $codeCmd --install-extension wokwi.wokwi-vscode | Out-Null
   Write-Host "installed wokwi.wokwi-vscode"
+}
+if ($extList -like '*actboy168.tasks*') {
+  Write-Host "tasks button extension already installed - skipping"
+} else {
+  & $codeCmd --install-extension actboy168.tasks | Out-Null
+  Write-Host "installed actboy168.tasks (Build/Simulate buttons appear in the bottom status bar)"
 }
 
 # ---- 5. git (optional but recommended for group work) ----

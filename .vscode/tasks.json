@@ -24,15 +24,21 @@
       "problemMatcher": []
     },
     {
-      "label": "Simulate (Wokwi CLI, needs WSL or token)",
+      "label": "Simulate (use F1 > Wokwi: Start Simulator)",
       "type": "shell",
+      "windows": {
+        "command": "echo",
+        "args": [
+          "For the interactive circuit simulator press F1 and choose 'Wokwi: Start Simulator'. Headless sim (WSL only): bash sim.sh"
+        ]
+      },
       "linux": {
         "command": "bash",
-        "args": ["-c", "export WOKWI_CLI_TOKEN=$(grep WOKWI_CLI_TOKEN ~/.bashrc | cut -d= -f2); ~/.local/bin/wokwi-cli --timeout 12000 --expect-text ';190;928;24;100;24;194;1' --serial-log-file build/serial.log ."]
+        "args": ["-c", "./sim.sh"]
       },
       "osx": {
         "command": "bash",
-        "args": ["-c", "~/.local/bin/wokwi-cli --timeout 12000 --expect-text ';190;928;24;100;24;194;1' --serial-log-file build/serial.log ."]
+        "args": ["-c", "./sim.sh"]
       },
       "dependsOn": ["Build (arduino-cli)"],
       "presentation": {
