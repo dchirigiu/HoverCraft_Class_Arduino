@@ -47,6 +47,8 @@ flashed to the real Arduino Nano when it's your turn.
 Wokwi has an exact **HC-SR04** part. There is no Sharp GP2Y0A21 part, so the IR
 sensor is emulated by a **potentiometer on A0** (`ir` in diagram.json) — turn the
 knob to set the "distance". The firmware converts mV → cm with a piecewise-linear
+table (`IR_TABLE`) using the Sharp datasheet curve. Replace those table values
+with your own DMM calibration points for the TA1 report.
 ## Flashing the real board
 
 On Windows: `.\flash.cmd` (no args) lists the ports. Then `.\flash.cmd COM5`
