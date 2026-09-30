@@ -49,9 +49,16 @@ uint16_t ir_mv() {
 }
 
 // Piecewise-linear inverse of IR_TABLE, integer arithmetic only.
+// A voltage above the 10 cm table entry means the obstacle is CLOSER than 10 cm:
+// clamp to 10 cm so "d1 or less -> 100%" holds (TA1). Only readings below the
+// far end (> 80 cm) are out of range. In the non-monotonic <7 cm zone the table
+// returns a larger distance - that observed anomaly is what TA1 Q3 asks about.
 uint16_t ir_cm(uint16_t mv) {
-    if (mv > pgm_read_word(&IR_TABLE[0][0]) || mv < pgm_read_word(&IR_TABLE[IR_TABLE_N - 1][0])) {
-        return IR_OUT_OF_RANGE;  // closer than 10 cm or farther than 80 cm (TA1 Q3)
+    if (mv < pgm_read_word(&IR_TABLE[IR_TABLE_N - 1][0])) {
+        return IR_OUT_OF_RANGE;  // farther than 80 cm
+    }
+    if (mv > pgm_read_word(&IR_TABLE[0][0])) {
+        return pgm_read_word(&IR_TABLE[0][1]);  // closer than 10 cm -> 10 cm
     }
     for (uint8_t i = 0; i < IR_TABLE_N - 1; i++) {
         const uint16_t vHi = pgm_read_word(&IR_TABLE[i][0]);
@@ -76,11 +83,6 @@ uint16_t us_cm() {
     return (us == 0) ? IR_OUT_OF_RANGE : (uint16_t)(us / 58);
 }
 
-uint16_t source_cm() {
-    const uint16_t cm = (SENSOR_SOURCE == SENSOR_IR) ? ir_cm(ir_mv()) : us_cm();
-    return cm;
-}
-
 void setup() {
     pinMode(PIN_IR, INPUT);
     pinMode(PIN_TRIG, OUTPUT);
@@ -90,6 +92,7 @@ void setup() {
     // TA1 Q1: if you chose an external reference, set it here, e.g.
     // analogReference(EXTERNAL); and update VREF_MV accordingly.
     Serial.begin(9600);
+    Serial.println(F("TA1 READY"));
     Serial.println(F("ENGR290 TA1 | IR=GP2Y0A21@A0 US=HC-SR04 TRIG=D5 ECHO=D2 | 9600 8N1"));
     Serial.println(F("t_ms;IR_adc;IR_mV;IR_cm;US_cm;src_cm;PWM;L"));
 }
@@ -103,7 +106,7 @@ void loop() {
     const uint16_t mv = ir_mv();
     const uint16_t cmIr = ir_cm(mv);
     const uint16_t cmUs = us_cm();
-    const uint16_t cm = source_cm();
+    const uint16_t cm = (SENSOR_SOURCE == SENSOR_IR) ? cmIr : cmUs;
 
     // D3: 100% at d1, 0% at d2, linear in between (map is 32-bit integer math).
     uint8_t pwm;
