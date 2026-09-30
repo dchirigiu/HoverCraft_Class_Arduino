@@ -1,3 +1,4 @@
 build/
+build-board/
 *.log
 wokwi.vcd

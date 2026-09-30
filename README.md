@@ -24,7 +24,8 @@ flashed to the real Arduino Nano when it's your turn.
    (On Windows: install arduino-cli, then run `flash.cmd` to compile+flash.)
 4. Press **F1 → "Wokwi: Request a new License"** (one-time, free): confirm the
    browser, click **GET YOUR LICENSE**, confirm twice.
-5. Press **F1 → "Wokwi: Start Simulator"** — that's the virtual Nano with the sensors.
+5. Press **F1 → "Wokwi: Request a new License"** (one-time, free, private OK):
+   confirm the browser tab, click **GET YOUR LICENSE**, close the tab.
 
 ## Simulating
 
@@ -48,11 +49,15 @@ sensor is emulated by a **potentiometer on A0** (`ir` in diagram.json) — turn 
 knob to set the "distance". The firmware converts mV → cm with a piecewise-linear
 table (`IR_TABLE` in the sketch) using the Sharp datasheet curve; replace the
 table values with your own DMM calibration points for the report.
-
+table (`IR_TABLE`) using the Sharp datasheet curve. Replace those table values
+with your own DMM calibration points for the TA1 report.
 ## Flashing the real board
 
-On Windows: `flash.cmd COM5` (new bootloader) or `flash.cmd COM5 oldbootloader`
-(older Nano clones). Find the COM port with `flash.cmd` (no args) → `board list`.
+On Windows: `.\flash.cmd` (no args) lists the ports. Then `.\flash.cmd COM5`
+(new bootloader) or `.\flash.cmd COM5 oldbootloader` (clone Nanos). The board
+build defines `-DON_BOARD` so the sketch uses `VREF_MV_BOARD` instead of the
+simulator's 5000 mV: measure AREF with the DMM and set `VREF_MV_BOARD` in the
+sketch before flashing. The boot banner prints which build is running.
 
 ## Comparing sim vs board
 
@@ -93,3 +98,50 @@ On Windows: `flash.cmd COM5` (new bootloader) or `flash.cmd COM5 oldbootloader`
   appear in the sim and on the real board. The printed `PWM` column is the
   *logical* duty (100% = 255); the pin output is inverted because D3 is
   active-low.
+
+## Test A: simulator only (2 min)
+
+No board needed — prove the workflow and the team can share code.
+
+1. **Everyone:** Pull the repo, press F1 → Wokwi: Start Simulator in VS Code.
+2. **Observe:** Serial monitor shows `TA1 READY`, `simulator build | VREF_MV=5000`, then the data rows every 0.5 s.
+3. **Change the knob:** Click the potentiometer (`ir`), drag or press arrow keys to set a new value. Watch `IR_adc`, `IR_mV`, `IR_cm` change. When `src_cm` is 16–49, L is solid ON; outside that range it blinks.
+4. **Change the US distance:** Click the HC-SR04, drag the `distance` slider. Watch `US_cm` and `US_us` change (the echo time in microseconds).
+5. **Push a trivial change** (add a comment anywhere in the sketch), rebuild (`./build.sh` or `build.cmd`), re-run the sim. The group sees your commit on GitHub; pulling it gets everyone the same binary.
+
+## Test B: real board (5 min)
+
+One person flashes the board while the others watch the serial output.
+
+**Before you start:** open the sketch and set `VREF_MV_BOARD` to your DMM reading of the AREF pin voltage (typically ~5000 mV if RV1 is at max, or 3.3 V if the course default is 3.3 V). Save. The simulator ignores this value.
+
+1. **Install the CH340/CH341 USB-serial driver** if Windows doesn't recognize the Nano: download [CH341SER.EXE](https://wch-ic.com/downloads/CH341SER_EXE.html), run it, click Install. Unplug and replug the Nano.
+2. **Find the port:** open a terminal (PowerShell), `cd` into the repo folder, type `.\flash.cmd` (no args). It prints `Port Protocol Type Board Name FQBN Core` and lists every serial device. The Nano typically shows as `COMx Serial Port (USB) Unknown`. Write down the port (e.g. `COM5`).
+3. **Flash:** type `.\flash.cmd COM5`. It compiles with `-DON_BOARD`, uploads the hex, then opens the serial monitor. You'll see `TA1 READY`, `board build | VREF_MV=...`, then data rows. Press Ctrl+C to exit the monitor.
+4. **Move the IR sensor:** slide the obstacle from 10 cm to 80 cm. Watch the `IR_mV` and `IR_cm` columns. At 16 cm, D3 is fully bright and L switches from blinking to solid ON. At 49 cm, D3 goes dark and L starts blinking again. The two LEDs are independent below 16 cm: D3 stays full ON, L blinks.
+5. **Compare sim vs board:** the columns should match at the same obstacle distance — ADC counts and mV are identical for the same AREF voltage, and the PWM/L logic is deterministic. If L blinks in the sim at 10 cm but is solid on the board, check that you rebuilt after the latest pull.
+
+## Adding a part to the simulator (1 min)
+
+When you need another sensor, servo, or display in the Wokwi diagram:
+
+1. **Web editor (easiest):** Open [wokwi.com/projects/new/arduino-nano](https://wokwi.com/projects/new/arduino-nano), click the blue **+** button at the top, pick a part. Drag it, wire it (click one pin, then the target pin), then copy the new `parts` and `connections` entries from that web project's `diagram.json` (click it in the left panel) into your local `diagram.json`. Save. F1 → Wokwi: Start Simulator loads the new diagram.
+2. **Text edit (full control):** Open `diagram.json` in VS Code. Add an object to the `"parts"` array (copy an existing one as a template, give it a unique `"id"` and `"type"` — see [Wokwi parts docs](https://docs.wokwi.com/)). Add wire entries to `"connections"`: each is `["sourceId:pinName", "targetId:pinName", "color", []]`. For example, to wire a servo PWM line to D9 and power it: `["servo1:PWM", "nano:9", "orange", []]`, `["servo1:V+", "nano:5V", "red", []]`, `["servo1:GND", "nano:GND.1", "black", []]`. Run `wokwi-cli lint` (needs `npm install -g wokwi-cli`) to catch typos.
+3. **VS Code diagram editor (Hobby+ plan only):** click `diagram.json`, use the visual tools to add/drag/wire parts. The free Community plan can view the diagram but not edit it visually — you edit the JSON directly instead.
+
+**Pins:** Hover over a pin in the web sim to see its name (e.g. `nano:A0`, `nano:13`, `nano:GND.1`). `$serialMonitor:RX` and `$serialMonitor:TX` are special: they let you wire a software serial port to the serial monitor (not needed for the Nano — it auto-wires the hardware UART).
+
+**Example:** to add a second ultrasonic sensor on D10 (TRIG) and D11 (ECHO), insert into `"parts"`:
+```json
+{ "type": "wokwi-hc-sr04", "id": "us2", "top": 100, "left": 400, "attrs": { "distance": "50" } }
+```
+and into `"connections"`:
+```json
+["us2:TRIG", "nano:10", "orange", []],
+["us2:ECHO", "nano:11", "yellow", []],
+["us2:VCC", "nano:5V", "red", []],
+["us2:GND", "nano:GND.2", "black", []]
+```
+then update the sketch to read pin 11 with `pulseIn()`.
+
+**Gotcha:** If you add a part and the sim refuses to start, run `wokwi-cli lint .` (after `npm install -g wokwi-cli`) — it catches duplicate IDs, bad pin names, and missing parts.

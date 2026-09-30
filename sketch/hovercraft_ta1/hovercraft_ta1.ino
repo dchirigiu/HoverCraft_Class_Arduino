@@ -8,7 +8,7 @@
  *   - "L" LED (PB5 / D13) flashes with T = 1.5 s while obstacle is OUTSIDE [d1; d2]
  *     (closer than d1, farther than d2, or no reading) and is solid ON inside it.
  *     Below d1, D3 is at 100% AND L flashes: the two rules are independent.
- *   - Prints ADC counts, millivolts, and distance over UART (9600 8-N-1)
+ *   - Prints ADC counts, millivolts, distances and the US echo time over UART (9600 8-N-1)
  *
  * Integer math only (TA1 question 6): no floats anywhere. Distances come from a
  * piecewise-linear lookup table / us / 58 division.
@@ -19,8 +19,8 @@
 #include <Arduino.h>
 
 // ---------------- Pins (mirrored in diagram.json) ----------------
-const uint8_t PIN_IR   = A0; // GP2Y0A21 analog out -> any ADC header on the course PCB
-const uint8_t PIN_TRIG = 8;  // HC-SR04 TRIG (D8; NEVER D4-D7 = PD4-PD7: power-control outputs on the course PCB, init_290.c)
+const uint8_t PIN_IR   = A0; // GP2Y0A21 out: ADC channel of the 3-pin header you use (course code reads A0-A3, A6, A7)
+const uint8_t PIN_TRIG = 8;  // HC-SR04 TRIG: check which Nano pin your 4-pin header routes TRIG to. NEVER D4-D7 (PD4-PD7: power control, init_290.c)
 const uint8_t PIN_ECHO = 2;  // HC-SR04 ECHO (INT0, same channel as course sample code)
 const uint8_t PIN_D3   = 11; // D3 LED = PB3 (Arduino pin 11), ACTIVE-LOW on the course PCB (init_290.c: "PB3-HI (D3 OFF)"); PWM via OC2A
 const uint8_t PIN_L    = 13; // "L" LED (PB5), active-high on the course board
@@ -29,7 +29,17 @@ const uint8_t PIN_L    = 13; // "L" LED (PB5), active-high on the course board
 enum sensor_t : uint8_t { SENSOR_IR, SENSOR_US };
 #define SENSOR_SOURCE SENSOR_IR   // which sensor drives D3 / L for the experiments
 
-const uint16_t VREF_MV = 5000;     // TA1 Q1: set to YOUR chosen Vref (default = AVcc 5V)
+// ADC reference = the voltage on the AREF pin (analogReference(EXTERNAL) in
+// setup, same as the course's adc_init). On the course PCB, RV1 sets it (TA1
+// experiment 1). The Wokwi simulator ignores AREF and always measures against
+// 5 V, so simulator builds use 5000. flash.cmd builds with -DON_BOARD, which
+// uses VREF_MV_BOARD instead: write your DMM reading of AREF there, in mV.
+const uint16_t VREF_MV_BOARD = 5000;
+#ifdef ON_BOARD
+const uint16_t VREF_MV = VREF_MV_BOARD;
+#else
+const uint16_t VREF_MV = 5000;
+#endif
 const uint16_t D1_CM   = 16;       // at or below -> brightness 100%
 const uint16_t D2_CM   = 49;       // at or above -> brightness 0%
 const uint16_t IR_OUT_OF_RANGE = 999;
@@ -46,8 +56,8 @@ const uint16_t IR_TABLE[][2] PROGMEM = {
 };
 const uint8_t IR_TABLE_N = sizeof(IR_TABLE) / sizeof(IR_TABLE[0]);
 
-uint16_t ir_mv() {
-    return (uint16_t)((uint32_t)analogRead(PIN_IR) * VREF_MV / 1023);
+uint16_t ir_mv(uint16_t adc) {
+    return (uint16_t)((uint32_t)adc * VREF_MV / 1023);
 }
 
 // Piecewise-linear inverse of IR_TABLE, integer arithmetic only.
@@ -74,29 +84,48 @@ uint16_t ir_cm(uint16_t mv) {
     return IR_OUT_OF_RANGE;
 }
 
-// HC-SR04: 10 us TRIG pulse, measure ECHO high time. cm = us / 58.
-uint16_t us_cm() {
+// HC-SR04: 10 us TRIG pulse, then measure how long ECHO stays high (the "time"
+// reading for TA1 table 1). Returns 0 when no echo arrives within 30 ms.
+uint16_t us_echo_us() {
     digitalWrite(PIN_TRIG, LOW);
     delayMicroseconds(4);
     digitalWrite(PIN_TRIG, HIGH);
     delayMicroseconds(10);
     digitalWrite(PIN_TRIG, LOW);
-    const unsigned long us = pulseIn(PIN_ECHO, HIGH, 30000UL);  // 30 ms ~ 5 m max
-    return (us == 0) ? IR_OUT_OF_RANGE : (uint16_t)(us / 58);
+    return (uint16_t)pulseIn(PIN_ECHO, HIGH, 30000UL);  // 30 ms ~ 5 m max
 }
 
 void setup() {
+    // FIRST, before any analogRead(): RV1 drives AREF on the course PCB, and the
+    // default (AVcc) reference would short AVcc to it inside the chip.
+    analogReference(EXTERNAL);
+    // D4-D7 (PD4-PD7) are power-control outputs on the course PCB. Hold them
+    // LOW like the course's gpio_init() does, so nothing switches on by itself.
+    for (uint8_t p = 4; p <= 7; p++) {
+        digitalWrite(p, LOW);
+        pinMode(p, OUTPUT);
+    }
     pinMode(PIN_IR, INPUT);
     pinMode(PIN_TRIG, OUTPUT);
     pinMode(PIN_ECHO, INPUT);
     pinMode(PIN_D3, OUTPUT);
     pinMode(PIN_L, OUTPUT);
-    // TA1 Q1: if you chose an external reference, set it here, e.g.
-    // analogReference(EXTERNAL); and update VREF_MV accordingly.
     Serial.begin(9600);
     Serial.println(F("TA1 READY"));
-    Serial.println(F("ENGR290 TA1 | IR=GP2Y0A21@A0 US=HC-SR04 TRIG=D8 ECHO=D2 | 9600 8N1"));
-    Serial.println(F("t_ms;IR_adc;IR_mV;IR_cm;US_cm;src_cm;PWM;L"));
+#ifdef ON_BOARD
+    Serial.print(F("board build"));
+#else
+    Serial.print(F("simulator build"));
+#endif
+    Serial.print(F(" | VREF_MV="));
+    Serial.print(VREF_MV);
+    Serial.print(F(" | IR=A"));
+    Serial.print(PIN_IR - A0);
+    Serial.print(F(" TRIG=D"));
+    Serial.print(PIN_TRIG);
+    Serial.print(F(" ECHO=D"));
+    Serial.println(PIN_ECHO);
+    Serial.println(F("t_ms;IR_adc;IR_mV;IR_cm;US_cm;src_cm;PWM;L;US_us"));
 }
 
 void loop() {
@@ -105,9 +134,10 @@ void loop() {
 
     const unsigned long now = millis();
     const uint16_t adc = analogRead(PIN_IR);
-    const uint16_t mv = ir_mv();
+    const uint16_t mv = ir_mv(adc);
     const uint16_t cmIr = ir_cm(mv);
-    const uint16_t cmUs = us_cm();
+    const uint16_t echoUs = us_echo_us();
+    const uint16_t cmUs = (echoUs == 0) ? IR_OUT_OF_RANGE : echoUs / 58;
     const uint16_t cm = (SENSOR_SOURCE == SENSOR_IR) ? cmIr : cmUs;
 
     // D3: 100% at d1, 0% at d2, linear in between (map is 32-bit integer math).
@@ -143,6 +173,8 @@ void loop() {
         Serial.print(';');
         Serial.print(pwm);
         Serial.print(';');
-        Serial.println(lState ? 1 : 0);
+        Serial.print(lState ? 1 : 0);
+        Serial.print(';');
+        Serial.println(echoUs);
     }
 }
